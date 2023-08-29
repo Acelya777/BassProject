@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BASSCOMPORT", "BASSCOMPORT.csproj", "{4ABBBCF7-2617-48CA-B277-AA8C1118246D}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PICO_CONTROLLER", "..\PICO_CONTROLLER\PICO_CONTROLLER.vdproj", "{35419CAB-4604-4FB7-A091-3E00B78DD7B5}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "FMPV_PICO_CONTROLLER", "..\FMPV_PICO_CONTROLLER\FMPV_PICO_CONTROLLER.vdproj", "{4893AB47-2F44-4BBF-87C4-B1540B4388FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4ABBBCF7-2617-48CA-B277-AA8C1118246D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ABBBCF7-2617-48CA-B277-AA8C1118246D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ABBBCF7-2617-48CA-B277-AA8C1118246D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ABBBCF7-2617-48CA-B277-AA8C1118246D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35419CAB-4604-4FB7-A091-3E00B78DD7B5}.Debug|Any CPU.ActiveCfg = Debug
+		{35419CAB-4604-4FB7-A091-3E00B78DD7B5}.Release|Any CPU.ActiveCfg = Release
+		{4893AB47-2F44-4BBF-87C4-B1540B4388FB}.Debug|Any CPU.ActiveCfg = Debug
+		{4893AB47-2F44-4BBF-87C4-B1540B4388FB}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D3FCF9BF-E57C-4546-9483-16A4DCF1A37B}
+	EndGlobalSection
+EndGlobal
