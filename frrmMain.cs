@@ -11,6 +11,7 @@ using MathNet.Numerics.LinearRegression;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
 
+
 namespace BASSCOMPORT
 {
 
@@ -38,6 +39,7 @@ namespace BASSCOMPORT
         MySqlCommand myCommand;
         string[] valuesX = new string[8];
         double[] sendkVal = new double[3];
+        private Thread listenerThread;
 
         public static double[] Polynomial(double[] x, double[] y, int order)
         {
@@ -137,6 +139,24 @@ namespace BASSCOMPORT
          
             btnOpen.Enabled = true;
             btnClose.Enabled = false;
+            //Console.WriteLine(Size.Width + "," + Size.Height);
+            Size = new Size(1190, 702);
+
+
+
+            //string selectedValue = cBoxBaudRate_SelectedIndexChanged
+            //string selPort =serialPort1.PortName.ToString();
+
+            //    if (selPort != selectedValue)
+            //{
+            //    MessageBox.Show("Error!");
+            //} 
+            
+
+
+
+
+
 
             chBoxDTREnable.Checked = false; //FOR İNİTİALİZE
             serialPort1.DtrEnable = false;
@@ -219,6 +239,10 @@ namespace BASSCOMPORT
                 serialPort1.StopBits = (StopBits)Enum.Parse(typeof(StopBits), cBoxStopBits.Text);
                 serialPort1.Parity = (Parity)Enum.Parse(typeof(Parity), cBoxParity.Text);
                 serialPort1.Open();
+                listenerThread = new Thread(ListenForPortChanges);
+                listenerThread.Start();
+                
+                
                
                 progressBar1.Value = 100;
                 label15.Text = "OPENED";
@@ -241,6 +265,35 @@ namespace BASSCOMPORT
                 lblStatusCom.Text = "OFF";
             }
             
+        }
+
+
+        private void ListenForPortChanges()
+        {
+            while (serialPort1.IsOpen) {
+                Thread.Sleep(1000);
+
+                try
+                {
+                    if(!SerialPort.GetPortNames().Contains(serialPort1.PortName)) {
+
+                        Invoke((MethodInvoker)delegate {
+                            MessageBox.Show("selected port connection error!");
+                            btnClose.PerformClick();
+                            Application.Restart();
+                        });
+                        break;
+                    }
+                }
+                catch (Exception err) {
+                    Invoke((MethodInvoker)delegate
+                    {
+                        MessageBox.Show("port control error!");
+                        btnClose.PerformClick();
+                    });
+                    break;
+                }
+            }
         }
         private void cLOSEToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -332,8 +385,6 @@ namespace BASSCOMPORT
 
         private void tBoxDataOut_TextChanged(object sender, EventArgs e)
         {
-            int dataOUTLEnght= tBoxDataOut.TextLength;
-            lblDataOutLength.Text = string.Format("{0:00}", dataOUTLEnght);// keep string format 2 digit
 
 
 
@@ -489,6 +540,7 @@ namespace BASSCOMPORT
                 List<string> s = new List<string>(
                 DataIn.Split(new string[] { "*" }, StringSplitOptions.None));
 
+
                 if(s[1].Equals("0"))
                 {
                     checkBox1.Checked = true;
@@ -502,20 +554,23 @@ namespace BASSCOMPORT
 
                 numericUpDown1.Text = s[2];
                 numericUpDown2.Text = s[3];
+                numericUpDown3.Text = s[5];
+               // Console.WriteLine(numericUpDown3.ToString());
 
-                
-                tBupper.Text = s[5];
-                tBlower.Text = s[6];
-                tBKFactor.Text = s[7];
-                tBfilterDegree.Text = s[8];
-                tBfilterSample.Text = s[9];
+
+
+
+                tBupper.Text = s[6];
+                tBlower.Text = s[7];
+                tBKFactor.Text = s[8];
+                tBfilterDegree.Text = s[9];
+                tBfilterSample.Text = s[10];
 
 
             }
 
             else
             {
-                lblDataInLength.Text = String.Format("{0:00}", dataINLength);
 
                 if (toolStripComboBox1.Text == "Always Update")
                 {
@@ -607,7 +662,7 @@ namespace BASSCOMPORT
 
         private void Form1_Resize(object sender, EventArgs e)
         {
- 
+           
         }
 
         private void toolStripComboBox_appendOrOverwriteText_DropDownClosed(object sender, EventArgs e)
@@ -657,10 +712,19 @@ namespace BASSCOMPORT
 
         private void cBoxCOMPORT_DropDown(object sender, EventArgs e)
         {
+            try
+            {
+                string[] ports = SerialPort.GetPortNames();
+                cBoxCOMPORT.Items.Clear();
+                cBoxCOMPORT.Items.AddRange(ports);
 
-            string[] ports = SerialPort.GetPortNames();
-            cBoxCOMPORT.Items.Clear();
-            cBoxCOMPORT.Items.AddRange(ports);
+                
+
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.ToString());
+            }
+            
 
         }
 
@@ -943,20 +1007,12 @@ namespace BASSCOMPORT
         }
         private void tBupper_TextChanged(object sender, EventArgs e)
         {
-            if (System.Text.RegularExpressions.Regex.IsMatch(tBupper.Text, "[^0-9]"))
-            {
-                MessageBox.Show("Please enter only numbers.");
-                tBupper.Text = tBupper.Text.Remove(tBupper.Text.Length - 1);
-            }
+
         }
 
         private void tBlower_TextChanged(object sender, EventArgs e)
         {
-            if (System.Text.RegularExpressions.Regex.IsMatch(tBlower.Text, "[^0-9]"))
-            {
-                MessageBox.Show("Please enter only numbers.");
-                tBlower.Text = tBlower.Text.Remove(tBlower.Text.Length - 1);
-            }
+
         }
 
 
@@ -968,18 +1024,35 @@ namespace BASSCOMPORT
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (serialPort1.IsOpen)
+            if (unit0.Checked == true || unit1.Checked == true)
             {
-                String sendUpper;
-                sendUpper = tBupper.Text;
-                serialPort1.WriteLine("uf" + "*" + "M" + "*" + sendUpper + "*");
-                tBupper.BackColor = Color.Green;
-                tBoxDataIN.Text += "\r\n";
-            }
+                if (serialPort1.IsOpen)
+                {
+                    String sendUpper;
+                    long sendUpperF;
+                    double mx;
 
+                    tBupper.Text = tBupper.Text.Replace('.', ',');
+                    mx = double.Parse(tBupper.Text);
+                    sendUpperF = (long)(mx*1000.0);
+                    sendUpper = sendUpperF.ToString();
+                    //sendUpper = tBupper.Text;
+                    //sendUpperF = Int64.Parse(sendUpper, System.Globalization.NumberStyles.Float);
+                    //sendUpper = sendUpperF.ToString();
+                    serialPort1.WriteLine("uf" + "*" + "M" + "*" + sendUpper + "*");
+                    tBupper.BackColor = Color.Green;
+                    tBoxDataIN.Text += "\r\n";
+                }
+
+                else
+                {
+                    MessageBox.Show("OPEN COM PORT", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
             else
             {
-                MessageBox.Show("OPEN COM PORT", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("CHOOSE UNIT", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
             }
         }
 
@@ -987,10 +1060,30 @@ namespace BASSCOMPORT
         {
             if (serialPort1.IsOpen)
             {
-                tBfilterDegree.Text = tBfilterDegree.Text.Replace(',', '.');
-                serialPort1.WriteLine("uf" + "*" + "7" + "*" + tBfilterDegree.Text + "*");
-                tBfilterDegree.BackColor = Color.Green;
-                tBoxDataIN.Text += "\r\n";
+                String sendPeriod;
+                long sendPeriodF;
+                double mx;
+                tBfilterDegree.Text = tBfilterDegree.Text.Replace('.', ',');
+                mx = double.Parse(tBfilterDegree.Text);
+                sendPeriodF = (long)(mx*1000.0);
+
+                //sendPeriod = tBfilterDegree.Text;
+                //sendPeriodF = float.Parse(sendPeriod) * 1000;
+                sendPeriod = sendPeriodF.ToString();
+
+                if (sendPeriodF <= 1000)
+                {
+                    MessageBox.Show("Period cannot be under 2 miliseconds");
+                    tBfilterDegree.Text = tBfilterDegree.Text.Remove(tBfilterDegree.Text.Length - 1);
+
+                }
+                else {
+                    serialPort1.WriteLine("uf" + "*" + "7" + "*" + sendPeriod + "*");
+                    tBfilterDegree.BackColor = Color.Green;
+                    tBoxDataIN.Text += "\r\n";
+
+                }
+
 
             }
 
@@ -1004,8 +1097,19 @@ namespace BASSCOMPORT
         {
             if (serialPort1.IsOpen)
             {
-                tBfilterSample.Text = tBfilterSample.Text.Replace(',', '.');
-                serialPort1.WriteLine("uf" + "*" + "8" + "*" + tBfilterSample.Text + "*");
+                String pulseRatio;
+                long pulseRatioF;
+                double mx;
+                tBfilterSample.Text = tBfilterSample.Text.Replace('.', ',');
+                mx = double.Parse(tBfilterSample.Text);
+                pulseRatioF = (long)(mx * 1000.0);
+                pulseRatio = pulseRatioF.ToString();
+
+                //pulseRatio = tBfilterSample.Text;
+                //pulseRatioF = float.Parse(pulseRatio) * 1000;
+
+                pulseRatio = pulseRatioF.ToString();
+                serialPort1.WriteLine("uf" + "*" + "8" + "*" + pulseRatio + "*");
                 tBfilterSample.BackColor = Color.Green;
                 tBoxDataIN.Text += "\r\n";
             }
@@ -1132,6 +1236,7 @@ namespace BASSCOMPORT
 
                 numericUpDown1.BackColor = Color.White;
                 numericUpDown2.BackColor = Color.White;
+                numericUpDown3.BackColor = Color.White;
                 tBupper.BackColor = Color.White;
                 tBlower.BackColor = Color.White;
                 tBKFactor.BackColor = Color.White;
@@ -1219,7 +1324,7 @@ namespace BASSCOMPORT
         {
             if (serialPort1.IsOpen && checkBox9.Checked)
             {
-                serialPort1.WriteLine("uf" + "*" + "W" + "*" + senda + "*");
+                serialPort1.WriteLine("uf" + "*" + "Z" + "*" + senda + "*");
             }
         }
 
@@ -1255,12 +1360,97 @@ namespace BASSCOMPORT
             serialPort1.WriteLine("uf" + "*" + "U" + "*" + "" + "*");
         }
 
+        private void label14_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label28_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void numericUpDown3_ValueChanged(object sender, EventArgs e)
+        {
+            if (serialPort1.IsOpen)
+            {
+                serialPort1.WriteLine("uf" + "*" + "f" + "*" + numericUpDown3.Text + "*");
+                //tBoxDataIN.Text += "\r\n";
+            }
+        }
+
+        private void button10_Click_2(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked == true || checkBox2.Checked == true)
+            {
+                if (serialPort1.IsOpen)
+                {
+                    dataOUT = tBoxDataOut.Text;
+                    //serialPort1.Write(dataOUT);
+                    serialPort1.WriteLine("uf" + "*" + "g" + "*" + numericUpDown3.Text + "*");  // save lower value to eeprom
+                    numericUpDown3.BackColor = Color.Green;
+                    //tBupper.Clear();
+                    //tBlower.Clear();
+
+
+                    tBoxDataIN.Text += "\r\n";  //gelen yeni veriyi new line da görmek için
+
+                }
+
+                else
+                {
+                    MessageBox.Show("OPEN COM PORT", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+
+
+
+            }
+
+            else
+            {
+
+                MessageBox.Show("Choose mA or Volt Output", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void tBfilterSample_TextChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox3_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cBoxCOMPORT_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+
+        }
+
         private void button5_Click(object sender, EventArgs e)
         {
             if (serialPort1.IsOpen)
             {
                 String  sendLower;
-                sendLower = tBlower.Text;
+                long sendLowerF;
+                double mx;
+
+                tBlower.Text = tBlower.Text.Replace('.', ',');
+                mx = double.Parse(tBlower.Text);
+                sendLowerF = (long)(mx * 1000.0);
+                sendLower = sendLowerF.ToString();
+
+                //sendLower = tBlower.Text;
+                //sendLowerF = float.Parse(sendLower) * 1000;
+                //sendLower = sendLowerF.ToString();
                 serialPort1.WriteLine("uf" + "*" + "N" + "*" + sendLower + "*");
                 tBlower.BackColor = Color.Green;
                 tBoxDataIN.Text += "\r\n";
@@ -1277,10 +1467,13 @@ namespace BASSCOMPORT
             if (serialPort1.IsOpen)
             {
                 String sendK;
-                float sendKF;
-                sendK = tBKFactor.Text;
-                sendKF=float.Parse(sendK)*100;
-                sendK=sendKF.ToString();
+                long sendKF;
+                double mx;
+
+                tBKFactor.Text = tBKFactor.Text.Replace('.', ',');
+                mx = double.Parse(tBKFactor.Text);
+                sendKF = (long)(mx * 1000.0);
+                sendK = sendKF.ToString();
                 serialPort1.WriteLine("uf" + "*" + "J" + "*" + sendK + "*");
                 tBKFactor.BackColor = Color.Green;
                 tBoxDataIN.Text += "\r\n";
@@ -1296,29 +1489,6 @@ namespace BASSCOMPORT
 
         }
 
-        private void button9_Click(object sender, EventArgs e)
-        {
-            if (serialPort1.IsOpen)
-            {
-                
-            }
-
-            else
-            {
-                MessageBox.Show("OPEN COMPORT", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button10_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void checkBox8_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox8.Checked == true)
@@ -1328,20 +1498,6 @@ namespace BASSCOMPORT
             }
             else
                 groupBox5.Enabled = false;
-        }
-
-        private void textBox1_TextChanged_2(object sender, EventArgs e)
-        {
-
-        }
-        private void button11_Click_1(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void button10_Click_1(object sender, EventArgs e)
-        {
-            
         }
 
         private void cBoxBaudRate_SelectedIndexChanged(object sender, EventArgs e)
